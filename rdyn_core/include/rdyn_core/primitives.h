@@ -98,6 +98,15 @@ protected:
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Joint();
+
+  Joint(const Type type, const Eigen::Vector3d& axis, const std::string& name);
+  bool updateLimits(const double q_min,
+                    const double q_max,
+                    const double Dq_max,
+                    const double tau_max,
+                    std::string& error);
+  bool connectJoint(const rdyn::LinkPtr& parent_link, const rdyn::LinkPtr& child_link, const Eigen::Affine3d& pose);
+
   void fromUrdf(const urdf::JointPtr& urdf_joint, const rdyn::LinkPtr& parent_link, const urdf::LinkPtr& child_link);
 
   /**
@@ -224,6 +233,12 @@ public:
   }
 
   Eigen::VectorXd getNominalParameters() const;
+
+  bool tryAddChildJoint(const rdyn::JointPtr& joint);
+  bool tryAddParentJoint(const rdyn::JointPtr& joint);
+
+  bool addChildJoint(const rdyn::JointPtr& joint);
+  bool addParentJoint(const rdyn::JointPtr& joint);
 };
 
 class Chain
@@ -571,7 +586,13 @@ rdyn::ChainPtr createChain(const rdyn::ChainPtr& chain);
  */
 rdyn::ChainPtr createChain(const rdyn::Chain& chain);
 
+rdyn::ChainPtr mergeChains(const rdyn::ChainPtr& root_chain,
+                           const rdyn::ChainPtr& branch_chain,
+                           const rdyn::JointPtr& merge_joint,
+                           const Eigen::Affine3d& joint_pose);
 
+rdyn::ChainPtr mergeChains(const rdyn::ChainPtr& root_chain,
+                           const rdyn::ChainPtr& branch_chain);
 
 ///////////////////////////////////////////////////
 

@@ -24,6 +24,77 @@ inline Joint::Joint()
   computedTpc();
 }
 
+inline Joint::Joint(const Type type, const Eigen::Vector3d& axis, const std::string& name = "") : m_type(type), m_axis_in_j(axis), m_name(name)
+{
+  m_name = (name=="")? std::to_string((std::chrono::system_clock::now()).time_since_epoch().count()) : name;
+  m_skew_axis_in_j = skew(m_axis_in_j);
+  m_square_skew_axis_in_j = m_skew_axis_in_j * m_skew_axis_in_j;
+  m_identity.setIdentity();
+
+  m_last_q = 0;
+
+  m_last_T_pc.setIdentity();
+  m_last_R_jc.setIdentity();
+
+  m_identity.setIdentity();
+  m_screw_of_c_in_p.setZero();
+
+  computedTpc();
+}
+
+inline bool Joint::updateLimits(const double q_min,
+                                const double q_max,
+                                const double Dq_max,
+                                const double tau_max,
+                                std::string& error)
+{
+  if((q_min > q_max) || (std::isnan(q_min)) || (std::isnan(q_max)) )
+  {
+    error = " Joint" + m_name + ": max or min position is not compatible";
+    return false;
+  }
+  if((Dq_max < 0) || std::isnan(Dq_max))
+  {
+    error = " Joint" + m_name + ": max velocity was NAN or negative";
+    return false;
+  }
+  if((tau_max < 0) || std::isnan(tau_max))
+  {
+    error = " Joint" + m_name + ": max tau was NAN or negative";
+    return false;
+  }
+  m_q_min = q_min;
+  m_q_max = q_max;
+  m_tau_max = tau_max;
+  m_Dq_max = Dq_max;
+  m_DDq_max = 10.0 * Dq_max;
+  return true;
+}
+
+inline bool Joint::connectJoint(const rdyn::LinkPtr& parent_link, const rdyn::LinkPtr& child_link, const Eigen::Affine3d& pose)
+{
+  if(!(m_q_min < m_q_max))
+  {
+    std::cerr << "[rdyn core]: cannot connect Joint " << m_name << ". Limits unfeasible" << std::endl;
+    return false;
+  }
+  if(!child_link->addParentJoint(shared_from_this())) return false;
+  m_child_link = child_link;
+  if(!parent_link->addChildJoint(shared_from_this())) return false;
+  m_parent_link = parent_link;
+
+  m_T_pj = pose;
+  m_R_pj = m_T_pj.linear();
+  m_axis_in_p = m_R_pj * m_axis_in_j;
+  m_skew_axis_in_p = m_T_pj.linear() * m_skew_axis_in_j;
+  m_square_skew_axis_in_p = m_T_pj.linear() * m_square_skew_axis_in_j;
+  m_last_T_pc = m_T_pj;
+
+  computedTpc();
+  computeJacobian();
+  return true;
+}
+
 inline void Joint::computeJacobian()
 {
   if (m_type == REVOLUTE)
@@ -343,6 +414,89 @@ inline rdyn::JointPtr Link::findChildJoint(const std::string& name)
       return ptr;
   }
   return ptr;
+}
+
+bool Link::tryAddChildJoint(const rdyn::JointPtr& joint)
+{
+  if(!joint)
+  {
+    std::cerr << "[rdyn core] joint is empty" << std::endl;
+    return false;
+  }
+  if(joint->getName() == "")
+  {
+    std::cerr << "[rdyn core] Cannot add joint wihout name" << std::endl;
+    return false;
+  }
+  if(joint->getChildLink() == nullptr)
+  {
+    std::cerr << "[rdyn core] Cannot add Joint " << joint->getName() << " as it does not have a child link" << std::endl;
+    return false;
+  }
+  if(std::find(m_child_joints.begin(), m_child_joints.end(), joint) != m_child_joints.end())
+  {
+    std::cerr << "[rdyn core] Cannot add Joint " << joint->getName() << " as it is already connected" << std::endl;
+    return false;
+  }
+  if(joint == m_parent_joint)
+  {
+    std::cerr << "[rdyn core] Cannot add Joint " << joint->getName() << " as child as it is the parent" << std::endl;
+    return false;
+  }
+  return true;
+}
+
+bool Link::addChildJoint(const rdyn::JointPtr& joint)
+{
+  if(tryAddChildJoint(joint))
+  {
+    m_child_joints.push_back(joint);
+    m_child_links.push_back(joint->getChildLink());
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+bool Link::tryAddParentJoint(const rdyn::JointPtr& joint)
+{
+  if(!joint)
+  {
+    std::cerr << "[rdyn core] joint is empty" << std::endl;
+    return false;
+  }
+  if(joint->getName() == "")
+  {
+    std::cerr << "[rdyn core] Cannot add joint wihout name" << std::endl;
+    return false;
+  }
+  if(std::find(m_child_joints.begin(), m_child_joints.end(), joint) != m_child_joints.end())
+  {
+    std::cerr << "[rdyn core] Cannot add Joint " << joint->getName() << " as it is already connected" << std::endl;
+    return false;
+  }
+  if(joint == m_parent_joint)
+  {
+    std::cerr << "[rdyn core] Joint " << joint->getName() << " is already connected as parent" << std::endl;
+    return false;
+  }
+  return true;
+}
+
+bool Link::addParentJoint(const rdyn::JointPtr &joint)
+{
+  if(tryAddParentJoint(joint))
+  {
+    m_parent_joint = joint;
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+
 }
 
 inline Chain::Chain(const Chain& cpy)
@@ -1396,6 +1550,24 @@ inline rdyn::ChainPtr createChain(const rdyn::Chain& cpy)
   return chain;
 }
 
+rdyn::ChainPtr mergeChains(const rdyn::ChainPtr& root_chain, const rdyn::ChainPtr& branch_chain)
+{
+  std::cout << "creating_merge_joint" << std::endl;
+  rdyn::JointPtr merge_joint(new rdyn::Joint(rdyn::Joint::Type::FIXED, Eigen::Vector3d::Zero()));
+  std::cout << "merge_joint" << std::endl;
+  merge_joint->connectJoint(root_chain->getLinks().back(), branch_chain->getLinks().front(), Eigen::Affine3d::Identity());
+  std::cout << "joint_connected" << std::endl;
+  if((root_chain->getGravity() - branch_chain->getGravity()).norm() > 1E-6)
+  {
+    std::cerr << "[rdyn core] Cannot merge Chains as they have different gravity vectors. Returning empty pointer" << std::endl;
+    return nullptr;
+  }
+  rdyn::ChainPtr new_chain(new rdyn::Chain(root_chain->getLinks().front(),
+                                       root_chain->getLinksName().front(),
+                                       branch_chain->getLinksName().back(),
+                                       root_chain->getGravity()));
+  return new_chain;
+}
 
 }  // namespace rdyn
 

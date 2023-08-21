@@ -9,8 +9,14 @@ set(rdyn_core_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
 # Our library dependencies (contains definitions for IMPORTED targets)
 include("${rdyn_core_DIR}/export_rdyn_core.cmake")
 
+include(CMakeFindDependencyMacro)
+find_dependency(eigen_matrix_utils)
+find_dependency(kinematics_filters)
+find_dependency(urdf)
+find_dependency(Boost COMPONENTS system filesystem date_time)
+
 # These are IMPORTED targets created by rdyn_coreTargets.cmake
-set(rdyn_core_LIBRARIES rdyn_core_utilities)
+set(rdyn_core_LIBRARIES rdyn_core)
 
 set(rdyn_core_EXECUTABLE rdyn_core_server)
 
