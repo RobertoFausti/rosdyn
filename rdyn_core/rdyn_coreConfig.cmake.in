@@ -18,5 +18,5 @@ find_dependency(Boost COMPONENTS system filesystem date_time)
 # These are IMPORTED targets created by rdyn_coreTargets.cmake
 set(rdyn_core_LIBRARIES rdyn_core)
 
-set(rdyn_core_EXECUTABLE rdyn_core_server)
+set(rdyn_core_EXECUTABLE rdyn_core)
 

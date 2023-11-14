@@ -1550,7 +1550,7 @@ inline rdyn::ChainPtr createChain(const rdyn::Chain& cpy)
   return chain;
 }
 
-rdyn::ChainPtr mergeChains(const rdyn::ChainPtr& root_chain, const rdyn::ChainPtr& branch_chain)
+rdyn::ChainPtr joinChains(const rdyn::ChainPtr& root_chain, const rdyn::ChainPtr& branch_chain)
 {
   std::cout << "creating_merge_joint" << std::endl;
   rdyn::JointPtr merge_joint(new rdyn::Joint(rdyn::Joint::Type::FIXED, Eigen::Vector3d::Zero()));

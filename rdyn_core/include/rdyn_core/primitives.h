@@ -586,12 +586,12 @@ rdyn::ChainPtr createChain(const rdyn::ChainPtr& chain);
  */
 rdyn::ChainPtr createChain(const rdyn::Chain& chain);
 
-rdyn::ChainPtr mergeChains(const rdyn::ChainPtr& root_chain,
+rdyn::ChainPtr joinChains(const rdyn::ChainPtr& root_chain,
                            const rdyn::ChainPtr& branch_chain,
                            const rdyn::JointPtr& merge_joint,
                            const Eigen::Affine3d& joint_pose);
 
-rdyn::ChainPtr mergeChains(const rdyn::ChainPtr& root_chain,
+rdyn::ChainPtr joinChains(const rdyn::ChainPtr& root_chain,
                            const rdyn::ChainPtr& branch_chain);
 
 ///////////////////////////////////////////////////
