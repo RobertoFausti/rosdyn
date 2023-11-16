@@ -416,7 +416,7 @@ inline rdyn::JointPtr Link::findChildJoint(const std::string& name)
   return ptr;
 }
 
-bool Link::tryAddChildJoint(const rdyn::JointPtr& joint)
+inline bool Link::tryAddChildJoint(const rdyn::JointPtr& joint)
 {
   if(!joint)
   {
@@ -446,7 +446,7 @@ bool Link::tryAddChildJoint(const rdyn::JointPtr& joint)
   return true;
 }
 
-bool Link::addChildJoint(const rdyn::JointPtr& joint)
+inline bool Link::addChildJoint(const rdyn::JointPtr& joint)
 {
   if(tryAddChildJoint(joint))
   {
@@ -460,7 +460,7 @@ bool Link::addChildJoint(const rdyn::JointPtr& joint)
   }
 }
 
-bool Link::tryAddParentJoint(const rdyn::JointPtr& joint)
+inline bool Link::tryAddParentJoint(const rdyn::JointPtr& joint)
 {
   if(!joint)
   {
@@ -485,7 +485,7 @@ bool Link::tryAddParentJoint(const rdyn::JointPtr& joint)
   return true;
 }
 
-bool Link::addParentJoint(const rdyn::JointPtr &joint)
+inline bool Link::addParentJoint(const rdyn::JointPtr &joint)
 {
   if(tryAddParentJoint(joint))
   {
@@ -1550,7 +1550,7 @@ inline rdyn::ChainPtr createChain(const rdyn::Chain& cpy)
   return chain;
 }
 
-rdyn::ChainPtr joinChains(const rdyn::ChainPtr& root_chain, const rdyn::ChainPtr& branch_chain)
+inline rdyn::ChainPtr joinChains(const rdyn::ChainPtr& root_chain, const rdyn::ChainPtr& branch_chain)
 {
   std::cout << "creating_merge_joint" << std::endl;
   rdyn::JointPtr merge_joint(new rdyn::Joint(rdyn::Joint::Type::FIXED, Eigen::Vector3d::Zero()));
