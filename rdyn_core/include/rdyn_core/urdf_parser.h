@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-# include <urdf/model.h>
+//# include <urdf/model.h>
 # include <Eigen/Geometry>
 # include <Eigen/StdVector>
 # include <boost/enable_shared_from_this.hpp>

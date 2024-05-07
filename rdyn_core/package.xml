@@ -14,7 +14,6 @@
 
   <author email="manuel.beschi@unibs.it">Manuel beschi</author>
 
-  <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>cmake</buildtool_depend>
 
   <build_depend>urdf</build_depend>

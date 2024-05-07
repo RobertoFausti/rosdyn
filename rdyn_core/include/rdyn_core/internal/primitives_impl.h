@@ -1,5 +1,4 @@
-#ifndef RDYN_RDYN_CORE_INCLUDE_RDYN_CORE_INTERNAL_PRIMITIVES_IMPL
-#define RDYN_RDYN_CORE_INCLUDE_RDYN_CORE_INTERNAL_PRIMITIVES_IMPL
+#pragma once  // QtCreator had problem using the guards
 
 #include <algorithm>
 #include <chrono>
@@ -7,7 +6,7 @@
 
 namespace rdyn
 {
-    
+
 
 ///////////////////////////////////////////////////
 
@@ -370,7 +369,7 @@ inline Chain::Chain(const rdyn::LinkPtr& root_link,
   }
 }
 
-inline Chain::Chain(const urdf::Model& model,
+inline Chain::Chain(const urdf::ModelInterface &model,
         const std::string& base_link_name, const std::string& ee_link_name, const Eigen::Vector3d& gravity)
 {
   rdyn::LinkPtr root_link(new rdyn::Link());
@@ -385,8 +384,8 @@ inline Chain::Chain(const urdf::Model& model,
 inline Chain::Chain(const std::string& urdf_file_file_path, 
             const std::string& base_link_name, const std::string& ee_link_name, const Eigen::Vector3d& gravity)
 {
-  urdf::Model model;
-  model.initFile(urdf_file_file_path);
+  urdf::ModelInterface model;
+  model=*urdf::parseURDFFile(urdf_file_file_path);
   rdyn::LinkPtr root_link(new rdyn::Link());
   root_link->fromUrdf(model.root_link_);
   std::string error;
@@ -1399,4 +1398,3 @@ inline rdyn::ChainPtr createChain(const rdyn::Chain& cpy)
 
 }  // namespace rdyn
 
-#endif  // RDYN_RDYN_CORE_INCLUDE_RDYN_CORE_INTERNAL_PRIMITIVES_IMPL

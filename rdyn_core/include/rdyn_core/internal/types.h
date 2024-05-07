@@ -27,7 +27,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef RDYN_CORE__TYPES_H
 #define RDYN_CORE__TYPES_H
 
-#include <urdf/model.h>
 #include <urdf_model/model.h>
 
 #include <Eigen/Geometry>

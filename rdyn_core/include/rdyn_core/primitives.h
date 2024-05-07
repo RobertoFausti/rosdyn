@@ -37,8 +37,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # include <Eigen/Geometry>
 # include <Eigen/StdVector>
 
-# include <urdf/model.h>
 # include <urdf_model/model.h>
+# include <urdf_parser/urdf_parser.h>
 
 # include <rdyn_core/urdf_parser.h>
 # include <rdyn_core/spacevect_algebra.h>
@@ -338,7 +338,7 @@ public:
           const std::string& base_link_name,
             const std::string& ee_link_name,
               const Eigen::Vector3d& gravity = Eigen::Vector3d::Zero());
-  Chain(const urdf::Model& model,
+  Chain(const urdf::ModelInterface& model,
           const std::string& base_link_name,
             const std::string& ee_link_name, 
               const Eigen::Vector3d& gravity = Eigen::Vector3d::Zero());
