@@ -559,6 +559,35 @@ rdyn::ChainPtr createChain( const urdf::ModelInterface& urdf_model_interface,
 
 /**
  * @brief construct the shared_ptr of a chain
+ *
+ * @param[in] urdf string
+ * @param[in] base frame
+ * @param[in] tool frame
+ * @param[in] gravity vector
+ */
+rdyn::ChainPtr createChain(const std::string& file,
+                           const std::string& base_frame,
+                           const std::string& tool_frame,
+                           const Eigen::Vector3d& gravity = {0,0,-9.806});
+
+
+
+/**
+ * @brief construct the shared_ptr of a chain
+ *
+ * @param[in] urdf file path
+ * @param[in] base frame
+ * @param[in] tool frame
+ * @param[in] gravity vector
+ */
+rdyn::ChainPtr createChainFromFile(const std::string& path,
+                              const std::string& base_frame,
+                              const std::string& tool_frame,
+                              const Eigen::Vector3d& gravity);
+
+
+/**
+ * @brief construct the shared_ptr of a chain
  * 
  * @param[in] Chain
  */

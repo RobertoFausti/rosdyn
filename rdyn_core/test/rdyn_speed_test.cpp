@@ -46,13 +46,10 @@ int main(int argc, char **argv)
   std::string base_frame = "base_link";
   std::string tool_frame = "tool0";
 
-  urdf::ModelInterface model;
-  model =  *urdf::parseURDFFile(urdf_path.string());
-
   Eigen::Vector3d grav;
   grav << 0, 0, -9.806;
 
-  shared_ptr_namespace::shared_ptr<rdyn::Chain> chain = rdyn::createChain(model, base_frame, tool_frame, grav);
+  shared_ptr_namespace::shared_ptr<rdyn::Chain> chain = rdyn::createChainFromFile(urdf_path.string(), base_frame, tool_frame, grav);
 
 
   unsigned int n_joints = chain->getActiveJointsNumber();

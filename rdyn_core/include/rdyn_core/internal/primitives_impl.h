@@ -1375,6 +1375,26 @@ inline rdyn::ChainPtr createChain(const urdf::ModelInterface& urdf_model_interfa
   return chain;
 }
 
+rdyn::ChainPtr createChain(const std::string& file,
+                           const std::string& base_frame,
+                           const std::string& tool_frame,
+                           const Eigen::Vector3d& gravity)
+{
+  urdf::ModelInterface model;
+  model =  *urdf::parseURDF(file);
+  return createChain(model,base_frame,tool_frame,gravity);
+}
+
+rdyn::ChainPtr createChainFromFile( const std::string& path,
+                              const std::string& base_frame,
+                              const std::string& tool_frame,
+                              const Eigen::Vector3d& gravity)
+{
+  urdf::ModelInterface model;
+  model =  *urdf::parseURDFFile(path);
+  return createChain(model,base_frame,tool_frame,gravity);
+}
+
 inline rdyn::ChainPtr createChain(const rdyn::ChainPtr& cpy)
 {
   rdyn::LinkPtr root_link = cpy->getLinks().front();
