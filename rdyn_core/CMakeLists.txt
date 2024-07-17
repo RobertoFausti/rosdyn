@@ -4,12 +4,8 @@
 cmake_minimum_required(VERSION 3.16.0)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/cnrConfigMacros.cmake)
-project(rdyn_core)
 get_project_name("package.xml" extracted_name extracted_version)
-
 project(${extracted_name} VERSION ${extracted_version} LANGUAGES CXX)
-
-# cnr_set_flags() # QUESTO FA SUI SINGOLI TARGET
 #############################
 ## END - PRELIMINARIES     ##
 #############################
