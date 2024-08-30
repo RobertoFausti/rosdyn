@@ -255,7 +255,15 @@ inline Eigen::Affine3d spatialIntegration(const Eigen::Affine3d& T_b_a, const Ei
 
   Eigen::Vector3d w_a_in_a=T_b_a.linear().transpose()*twist_of_a_in_b.tail(3);
   double amplitude=w_a_in_a.norm();
-  Eigen::AngleAxisd R_ap_in_a=Eigen::AngleAxisd(amplitude*dt,w_a_in_a/amplitude);
+  Eigen::AngleAxisd R_ap_in_a;
+  if(amplitude < 1e-12)
+  {
+    R_ap_in_a = Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitZ());
+  }
+  else
+  {
+    R_ap_in_a = Eigen::AngleAxisd(amplitude*dt,w_a_in_a/amplitude);
+  }
   T_b_ap.linear()=T_b_a.linear()*R_ap_in_a;
   return T_b_ap;
 }
