@@ -88,7 +88,7 @@ inline void Joint::fromUrdf(const urdf::JointPtr& urdf_joint, const rdyn::LinkPt
     if (urdf_joint->limits)
     {
       std::cerr<<  "[rdyn core] Joint '" << urdf_joint->name
-        << "' is malformed in the URDF! there is no joint limits << std::endl;
+        << "' is malformed in the URDF! there is no joint limits" << std::endl;
 
     }
     m_q_max   = urdf_joint->limits->upper;
