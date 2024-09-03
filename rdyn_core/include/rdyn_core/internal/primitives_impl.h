@@ -85,6 +85,12 @@ inline void Joint::fromUrdf(const urdf::JointPtr& urdf_joint, const rdyn::LinkPt
 
   if ((urdf_joint->type == urdf::Joint::PRISMATIC) || (urdf_joint->type == urdf::Joint::REVOLUTE))
   {
+    if (urdf_joint->limits)
+    {
+      std::cerr<<  "[rdyn core] Joint '" << urdf_joint->name
+        << "' is malformed in the URDF! there is no joint limits << std::endl;
+
+    }
     m_q_max   = urdf_joint->limits->upper;
     m_q_min   = urdf_joint->limits->lower;
     if(m_q_max<=m_q_min)
@@ -112,9 +118,18 @@ inline void Joint::fromUrdf(const urdf::JointPtr& urdf_joint, const rdyn::LinkPt
   {
     m_q_max   = 1e10;
     m_q_min   = -1e10;
-    m_Dq_max  = urdf_joint->limits->velocity;
+    if (urdf_joint->limits)
+    {
+      m_Dq_max  = urdf_joint->limits->velocity;
+      m_tau_max = urdf_joint->limits->effort;
+    }
+    else
+    {
+      m_Dq_max  = 1.0e10;
+      m_tau_max = 1.0e10;
+
+    }
     m_DDq_max = 10.0 * m_Dq_max;
-    m_tau_max = urdf_joint->limits->effort;
   }
 
   m_child_link.reset(new rdyn::Link());
