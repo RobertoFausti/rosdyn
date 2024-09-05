@@ -85,7 +85,7 @@ inline void Joint::fromUrdf(const urdf::JointPtr& urdf_joint, const rdyn::LinkPt
 
   if ((urdf_joint->type == urdf::Joint::PRISMATIC) || (urdf_joint->type == urdf::Joint::REVOLUTE))
   {
-    if (urdf_joint->limits)
+    if (!urdf_joint->limits)
     {
       std::cerr<<  "[rdyn core] Joint '" << urdf_joint->name
         << "' is malformed in the URDF! there is no joint limits" << std::endl;
