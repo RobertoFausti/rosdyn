@@ -46,13 +46,10 @@ int main(int argc, char **argv)
   std::string base_frame = "base_link";
   std::string tool_frame = "tool0";
 
-  urdf::Model model;
-  model.initFile(urdf_path.string());
-
   Eigen::Vector3d grav;
   grav << 0, 0, -9.806;
 
-  shared_ptr_namespace::shared_ptr<rdyn::Chain> chain = rdyn::createChain(model, base_frame, tool_frame, grav);
+  shared_ptr_namespace::shared_ptr<rdyn::Chain> chain = rdyn::createChainFromFile(urdf_path.string(), base_frame, tool_frame, grav);
 
 
   unsigned int n_joints = chain->getActiveJointsNumber();
@@ -105,11 +102,11 @@ int main(int argc, char **argv)
     DDDq.setRandom();
 
     t0 = std::chrono::high_resolution_clock::now();
-    t_null += std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - t0).count() * 1e6;
+    t_null += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t0).count() ;
     t0 = std::chrono::high_resolution_clock::now();
 
     T_base_tool = chain->getTransformation(q);
-    t_pose_eigen += std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - t0).count() * 1e6;
+    t_pose_eigen += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t0).count() ;
 
     q.setRandom();
     Dq.setRandom();
@@ -117,7 +114,7 @@ int main(int argc, char **argv)
     DDDq.setRandom();
     t0 = std::chrono::high_resolution_clock::now();
     jacobian_of_tool_in_base = chain->getJacobian(q);
-    t_jac_eigen += std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - t0).count() * 1e6;
+    t_jac_eigen += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t0).count() ;
 
     q.setRandom();
     Dq.setRandom();
@@ -125,7 +122,7 @@ int main(int argc, char **argv)
     DDDq.setRandom();
     t0 = std::chrono::high_resolution_clock::now();
     twists = chain->getTwist(q, Dq);
-    t_vel_eigen += std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - t0).count() * 1e6;
+    t_vel_eigen += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t0).count() ;
 
     q.setRandom();
     Dq.setRandom();
@@ -133,7 +130,7 @@ int main(int argc, char **argv)
     DDDq.setRandom();
     t0 = std::chrono::high_resolution_clock::now();
     linacc_twists = chain->getDTwistLinearPart(q, DDq);
-    t_linacc_eigen += std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - t0).count() * 1e6;
+    t_linacc_eigen += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t0).count() ;
 
     q.setRandom();
     Dq.setRandom();
@@ -141,7 +138,7 @@ int main(int argc, char **argv)
     DDDq.setRandom();
     t0 = std::chrono::high_resolution_clock::now();
     nonlinacc_twists = chain->getDTwistNonLinearPart(q, Dq);
-    t_nonlinacc_eigen += std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - t0).count() * 1e6;
+    t_nonlinacc_eigen += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t0).count() ;
 
     q.setRandom();
     Dq.setRandom();
@@ -149,7 +146,7 @@ int main(int argc, char **argv)
     DDDq.setRandom();
     t0 = std::chrono::high_resolution_clock::now();
     acc_twists = chain->getDTwist(q, Dq, DDq);
-    t_acc_eigen += std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - t0).count() * 1e6;
+    t_acc_eigen += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t0).count() ;
 
     q.setRandom();
     Dq.setRandom();
@@ -157,7 +154,7 @@ int main(int argc, char **argv)
     DDDq.setRandom();
     t0 = std::chrono::high_resolution_clock::now();
     jerk_twists = chain->getDDTwist(q, Dq, DDq, DDDq);
-    t_jerk_eigen += std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - t0).count() * 1e6;
+    t_jerk_eigen += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t0).count() ;
 
     q.setRandom();
     Dq.setRandom();
@@ -165,7 +162,7 @@ int main(int argc, char **argv)
     DDDq.setRandom();
     t0 = std::chrono::high_resolution_clock::now();
     tau = chain->getJointTorque(q, Dq, DDq);
-    t_torque_eigen += std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - t0).count() * 1e6;
+    t_torque_eigen += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t0).count() ;
 
     q.setRandom();
     Dq.setRandom();
@@ -173,7 +170,7 @@ int main(int argc, char **argv)
     DDDq.setRandom();
     t0 = std::chrono::high_resolution_clock::now();
     joint_inertia = chain->getJointInertia(q);
-    t_inertia_eigen += std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - t0).count() * 1e6;
+    t_inertia_eigen += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t0).count() ;
 
     twist_of_tool_in_base = chain->getTwistTool(q, Dq);
     linacc_twist_of_tool_in_base = chain->getDTwistLinearPartTool(q, DDq);
@@ -183,11 +180,11 @@ int main(int argc, char **argv)
   }
 
   printf("average on %d trials: \nnote:\ncompute torque implies computing acceleration,\ncompute acceleration implies computing velocity,\ncompute velocity implies computing pose\n", ntrial);  // NOLINT(whitespace/line_length)
-  printf("computation time No operation                                    = %8.5f [us]\n", t_null / ntrial);
+  printf("computation time No operation                                    = %8.5f [us]\n", t_null / (double)ntrial);
   printf("computation time pose                                            = %8.5f [us]\n", t_pose_eigen / ntrial);
   printf("computation time jacobian                                        = %8.5f [us]\n", t_jac_eigen / ntrial);
   printf("computation time velocity twists for all links                   = %8.5f [us]\n", t_vel_eigen / ntrial);
-  printf("computation time linear raceleration twists for all links        = %8.5f [us]\n", t_linacc_eigen / ntrial);
+  printf("computation time linear acceleration twists for all links        = %8.5f [us]\n", t_linacc_eigen / ntrial);
   printf("computation time non linear acceleration twists for all links    = %8.5f [us]\n", t_nonlinacc_eigen / ntrial);
   printf("computation time acceleration twists for all links               = %8.5f [us]\n", t_acc_eigen  / ntrial);
   printf("computation time jerk twists for all links                       = %8.5f [us]\n", t_jerk_eigen / ntrial);
@@ -197,6 +194,6 @@ int main(int argc, char **argv)
   auto st = std::chrono::high_resolution_clock::now();
   std::thread::id this_id = std::this_thread::get_id();
   auto et = std::chrono::high_resolution_clock::now();
-  std::cout << "GET ID "  << this_id << " | TIME  = " << std::chrono::duration_cast<std::chrono::seconds>(et-st).count() * 1e6 << "[us]" << std::endl;
+  std::cout << "GET ID "  << this_id << " | TIME  = " << std::chrono::duration_cast<std::chrono::microseconds>(et-st).count() << "[us]" << std::endl;
   return 0;
 }

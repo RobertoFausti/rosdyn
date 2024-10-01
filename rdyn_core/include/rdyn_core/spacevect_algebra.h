@@ -229,7 +229,7 @@ inline Eigen::Vector6d spatialDualTranformation(const Eigen::Vector6d& wrench_of
 }
 
 
-inline void computeSpatialInertiaMatrix(const Eigen::Ref<Eigen::Matrix3d>& inertia, const Eigen::Ref<Eigen::Vector3d> cog, const double& mass, Eigen::Ref<Eigen::Matrix<double, 6, 6>> spatial_inertia)
+inline void computeSpatialInertiaMatrix(const Eigen::Ref<Eigen::Matrix3d> inertia, const Eigen::Ref<Eigen::Vector3d> cog, const double& mass, Eigen::Ref<Eigen::Matrix<double, 6, 6>> spatial_inertia)
 {
   Eigen::Matrix3d cog_skew = rdyn::skew(cog);
   spatial_inertia.block(0, 0, 3, 3) = mass * Eigen::MatrixXd::Identity(3, 3);
@@ -255,7 +255,15 @@ inline Eigen::Affine3d spatialIntegration(const Eigen::Affine3d& T_b_a, const Ei
 
   Eigen::Vector3d w_a_in_a=T_b_a.linear().transpose()*twist_of_a_in_b.tail(3);
   double amplitude=w_a_in_a.norm();
-  Eigen::AngleAxisd R_ap_in_a=Eigen::AngleAxisd(amplitude*dt,w_a_in_a/amplitude);
+  Eigen::AngleAxisd R_ap_in_a;
+  if(amplitude < 1e-12)
+  {
+    R_ap_in_a = Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitZ());
+  }
+  else
+  {
+    R_ap_in_a = Eigen::AngleAxisd(amplitude*dt,w_a_in_a/amplitude);
+  }
   T_b_ap.linear()=T_b_a.linear()*R_ap_in_a;
   return T_b_ap;
 }

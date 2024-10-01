@@ -56,9 +56,9 @@ TEST(Suite, chainPtrTest)
   std::string base_frame = "base_link";
   std::string tool_frame = "tool0";
 
-  urdf::Model model;
-  model.initFile(urdf_path.string());
-  
+  urdf::ModelInterface model;
+  model =  *urdf::parseURDFFile(urdf_path.string());
+
   Eigen::Vector3d grav;
   grav << 0, 0, -9.806;
 
@@ -214,8 +214,8 @@ TEST(Suite, staticChainTest)
   std::string base_frame = "base_link";
   std::string tool_frame = "tool0";
 
-  urdf::Model model;
-  EXPECT_TRUE(model.initFile(urdf_path.string()) );
+  urdf::ModelInterface model;
+  model =  *urdf::parseURDFFile(urdf_path.string());
 
   Eigen::Vector3d grav;
   grav << 0, 0, -9.806;

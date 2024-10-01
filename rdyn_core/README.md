@@ -1,4 +1,4 @@
-![](../Documentation/rdyn_logo.png)
+[](../Documentation/rdyn_logo.png)
 
 
 rdyn_core is an Eigen-based Dynamics (header) library for robot chains.
@@ -21,18 +21,28 @@ An example of usage can be found [here](test/rdyn_speed_test.cpp)
 You need to include:
 ```c++
 #include <rdyn_core/primitives.h>
-#include <rdyn_core/urdf_parser.h>
 ```
 
-Creating a chain
+Creating a chain from file
 ```c++
-  urdf::Model model;
-  model.initParam("robot_description");
-  
+
+  urdf::ModelInterface model;
+  model =  *urdf::parseURDFFile(urdf_path.string());
+```
+
+Creating a chain from string (example, the text inside "robot_descritiption" ROS parameter
+```c++
+  model =  *urdf::parseURDFFile(urdf_text);
+```
+
+Define gravity
+```c++
   Eigen::Vector3d grav;
   grav << 0, 0, -9.806;
-  
-  boost::shared_ptr<rdyn::Chain> chain = rdyn::createChain(model, base_frame,tool_frame,grav);
+```
+
+```c++
+  rdyn::ChainPtr chain = rdyn::createChain(model, base_frame,tool_frame,grav);
 ```
 
 Initializing variables

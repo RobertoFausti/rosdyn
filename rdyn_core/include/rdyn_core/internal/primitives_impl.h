@@ -1,5 +1,4 @@
-#ifndef RDYN_RDYN_CORE_INCLUDE_RDYN_CORE_INTERNAL_PRIMITIVES_IMPL
-#define RDYN_RDYN_CORE_INCLUDE_RDYN_CORE_INTERNAL_PRIMITIVES_IMPL
+#pragma once  // QtCreator had problem using the guards
 
 #include <algorithm>
 #include <chrono>
@@ -7,7 +6,7 @@
 
 namespace rdyn
 {
-    
+
 
 ///////////////////////////////////////////////////
 
@@ -163,36 +162,58 @@ inline void Joint::fromUrdf(const urdf::JointPtr& urdf_joint, const rdyn::LinkPt
 
   if ((urdf_joint->type == urdf::Joint::PRISMATIC) || (urdf_joint->type == urdf::Joint::REVOLUTE))
   {
-    m_q_max   = urdf_joint->limits->upper;
-    m_q_min   = urdf_joint->limits->lower;
-    if(m_q_max<=m_q_min)
+    if (!urdf_joint->limits)
     {
       std::cerr<<  "[rdyn core] Joint '" << urdf_joint->name
-        << "' is malformed in the URDF! The range of motion is not specified properly "
-          << "(upper: " << urdf_joint->limits->upper << ", lower: " << urdf_joint->limits->lower << ")" << std::endl;
-      std::cerr << "Superimposed +/-2 M_PI rad" << std::endl;
-      m_q_max = 2 * M_PI;
-      m_q_min = -2 * M_PI;
+        << "' is malformed in the URDF! there is no joint limits" << std::endl;
+      m_q_max   = 1e10;
+      m_q_min   = -1e10;
+      m_Dq_max  = 1.0e10;
+      m_tau_max = 1.0e10;
     }
-    m_Dq_max  = urdf_joint->limits->velocity;
-    if(m_Dq_max<=0.0)
+    else
     {
-      std::cerr<<  "[rdyn core] Joint '" << urdf_joint->name 
-        << "' is malformed in the URDF! The max velocity isn't positive (vel: " 
-          << urdf_joint->limits->velocity <<")" << std::endl;
-      std::cerr << "Superimposed 2 * M_PI rad / sec" << std::endl;
-      m_Dq_max = 2 * M_PI ;
+      m_q_max   = urdf_joint->limits->upper;
+      m_q_min   = urdf_joint->limits->lower;
+      if(m_q_max<=m_q_min)
+      {
+        std::cerr<<  "[rdyn core] Joint '" << urdf_joint->name
+          << "' is malformed in the URDF! The range of motion is not specified properly "
+            << "(upper: " << urdf_joint->limits->upper << ", lower: " << urdf_joint->limits->lower << ")" << std::endl;
+        std::cerr << "Superimposed +/-2 M_PI rad" << std::endl;
+        m_q_max = 2 * M_PI;
+        m_q_min = -2 * M_PI;
+      }
+      m_Dq_max  = urdf_joint->limits->velocity;
+      if(m_Dq_max<=0.0)
+      {
+        std::cerr<<  "[rdyn core] Joint '" << urdf_joint->name
+          << "' is malformed in the URDF! The max velocity isn't positive (vel: "
+            << urdf_joint->limits->velocity <<")" << std::endl;
+        std::cerr << "Superimposed 2 * M_PI rad / sec" << std::endl;
+        m_Dq_max = 2 * M_PI ;
+      }
+      m_DDq_max = 10.0 * m_Dq_max;
+      m_tau_max = urdf_joint->limits->effort;
     }
-    m_DDq_max = 10.0 * m_Dq_max;
-    m_tau_max = urdf_joint->limits->effort;
+
   }
   else if (urdf_joint->type == urdf::Joint::CONTINUOUS)
   {
     m_q_max   = 1e10;
     m_q_min   = -1e10;
-    m_Dq_max  = urdf_joint->limits->velocity;
+    if (urdf_joint->limits)
+    {
+      m_Dq_max  = urdf_joint->limits->velocity;
+      m_tau_max = urdf_joint->limits->effort;
+    }
+    else
+    {
+      m_Dq_max  = 1.0e10;
+      m_tau_max = 1.0e10;
+
+    }
     m_DDq_max = 10.0 * m_Dq_max;
-    m_tau_max = urdf_joint->limits->effort;
   }
 
   m_child_link.reset(new rdyn::Link());
@@ -530,7 +551,7 @@ inline Chain::Chain(const rdyn::LinkPtr& root_link,
   }
 }
 
-inline Chain::Chain(const urdf::Model& model,
+inline Chain::Chain(const urdf::ModelInterface &model,
         const std::string& base_link_name, const std::string& ee_link_name, const Eigen::Vector3d& gravity)
 {
   rdyn::LinkPtr root_link(new rdyn::Link());
@@ -545,8 +566,8 @@ inline Chain::Chain(const urdf::Model& model,
 inline Chain::Chain(const std::string& urdf_file_file_path, 
             const std::string& base_link_name, const std::string& ee_link_name, const Eigen::Vector3d& gravity)
 {
-  urdf::Model model;
-  model.initFile(urdf_file_file_path);
+  urdf::ModelInterface model;
+  model=*urdf::parseURDFFile(urdf_file_file_path);
   rdyn::LinkPtr root_link(new rdyn::Link());
   root_link->fromUrdf(model.root_link_);
   std::string error;
@@ -1412,7 +1433,7 @@ inline bool Chain::computeLocalIk(Eigen::VectorXd& sol, const Eigen::Affine3d &T
   assert(seed.size()==m_q_min.size());
   sol = seed;
 
-  while(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - ti).count() < max_time_s)
+  while(std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - ti).count() < 1e3*max_time_s)
   {
 
     rdyn::getFrameDistance(T_b_t, getTransformation(sol), m_cart_error_in_b);
@@ -1449,7 +1470,7 @@ inline bool Chain::computeWeigthedLocalIk(Eigen::VectorXd& sol, const Eigen::Aff
 
   sol = seed;
 
-  while(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - ti).count() < max_time_s)
+  while(std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - ti).count() < 1e3*max_time_s)
   {
     rdyn::getFrameDistance(T_b_t, getTransformation(sol), m_cart_error_in_b);
 
@@ -1536,6 +1557,26 @@ inline rdyn::ChainPtr createChain(const urdf::ModelInterface& urdf_model_interfa
   return chain;
 }
 
+rdyn::ChainPtr createChain(const std::string& file,
+                           const std::string& base_frame,
+                           const std::string& tool_frame,
+                           const Eigen::Vector3d& gravity)
+{
+  urdf::ModelInterface model;
+  model =  *urdf::parseURDF(file);
+  return createChain(model,base_frame,tool_frame,gravity);
+}
+
+rdyn::ChainPtr createChainFromFile( const std::string& path,
+                              const std::string& base_frame,
+                              const std::string& tool_frame,
+                              const Eigen::Vector3d& gravity)
+{
+  urdf::ModelInterface model;
+  model =  *urdf::parseURDFFile(path);
+  return createChain(model,base_frame,tool_frame,gravity);
+}
+
 inline rdyn::ChainPtr createChain(const rdyn::ChainPtr& cpy)
 {
   rdyn::LinkPtr root_link = cpy->getLinks().front();
@@ -1577,4 +1618,3 @@ inline rdyn::ChainPtr joinChains(const rdyn::ChainPtr& root_chain, const rdyn::C
 
 }  // namespace rdyn
 
-#endif  // RDYN_RDYN_CORE_INCLUDE_RDYN_CORE_INTERNAL_PRIMITIVES_IMPL
