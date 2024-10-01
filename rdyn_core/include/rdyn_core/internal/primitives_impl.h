@@ -39,6 +39,12 @@ inline Joint::Joint(const Type type, const Eigen::Vector3d& axis, const std::str
   m_identity.setIdentity();
   m_screw_of_c_in_p.setZero();
 
+  if(m_type == rdyn::Joint::Type::FIXED)
+  {
+    std::string e;
+    updateLimits(0.0, 1e-9, 0.0, 0.0, e);
+  }
+
   computedTpc();
 }
 
