@@ -125,7 +125,7 @@ typedef shared_ptr_namespace::shared_ptr< rdyn::Chain const> ChainConstPtr;
 #if defined(MAX_NUM_AXES) && (MAX_NUM_AXES!=0)
   #define STR_HELPER(x) #x
   #define STR(x) STR_HELPER(x)
-  #pragma message "RDYN MAX NUM AXES: " STR(MAX_NUM_AXES)
+//  #pragma message "RDYN MAX NUM AXES: " STR(MAX_NUM_AXES)
   #define NUM_MAX_AXES MAX_NUM_AXES
 #else
   #define NUM_MAX_AXES 40
