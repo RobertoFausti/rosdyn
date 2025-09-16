@@ -10,6 +10,9 @@ project(${extracted_name} VERSION ${extracted_version} LANGUAGES CXX)
 ## END - PRELIMINARIES     ##
 #############################
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
 
 #############################
 ## OPTIONS                 ##
@@ -82,6 +85,7 @@ add_library(rdyn_core_compiled SHARED
 )
 
 target_compile_options(rdyn_core_compiled PUBLIC $<$<CONFIG:Release>:-Ofast -funroll-loops -ffast-math >)
+target_compile_definitions(rdyn_core_compiled PUBLIC RDYN_BUILD_SHARED)
 
 # Use the same include directories as the header-only library
 target_include_directories(rdyn_core_compiled

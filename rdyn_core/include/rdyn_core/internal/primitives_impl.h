@@ -1,4 +1,12 @@
-#pragma once  // QtCreator had problem using the guards
+// #pragma once  // QtCreator had problem using the guards
+#ifndef RDYN_CORE_PRIMITIVES_IMPL_H
+#define RDYN_CORE_PRIMITIVES_IMPL_H
+
+#ifdef RDYN_BUILD_SHARED
+#define RDYN_INLINE
+#else
+#define RDYN_INLINE inline
+#endif
 
 #include <algorithm>
 #include <chrono>
@@ -10,8 +18,7 @@ namespace rdyn
 
 ///////////////////////////////////////////////////
 
-inline Joint::Joint()
-{
+RDYN_INLINE Joint::Joint() {
   m_last_q = 0;
 
   m_last_T_pc.setIdentity();
@@ -23,8 +30,8 @@ inline Joint::Joint()
   computedTpc();
 }
 
-inline Joint::Joint(const Type type, const Eigen::Vector3d& axis, const std::string& name = "") : m_type(type), m_axis_in_j(axis), m_name(name)
-{
+RDYN_INLINE Joint::Joint(const Type type, const Eigen::Vector3d& axis, const std::string& name = "")
+    : m_type(type), m_axis_in_j(axis), m_name(name) {
   m_name = (name=="")? std::to_string((std::chrono::system_clock::now()).time_since_epoch().count()) : name;
   m_skew_axis_in_j = skew(m_axis_in_j);
   m_square_skew_axis_in_j = m_skew_axis_in_j * m_skew_axis_in_j;
@@ -47,12 +54,8 @@ inline Joint::Joint(const Type type, const Eigen::Vector3d& axis, const std::str
   computedTpc();
 }
 
-inline bool Joint::updateLimits(const double q_min,
-                                const double q_max,
-                                const double Dq_max,
-                                const double tau_max,
-                                std::string& error)
-{
+RDYN_INLINE bool Joint::updateLimits(const double q_min, const double q_max, const double Dq_max, const double tau_max,
+                                     std::string& error) {
   if((q_min > q_max) || (std::isnan(q_min)) || (std::isnan(q_max)) )
   {
     error = " Joint" + m_name + ": max or min position is not compatible";
@@ -76,8 +79,8 @@ inline bool Joint::updateLimits(const double q_min,
   return true;
 }
 
-inline bool Joint::connectJoint(const rdyn::LinkPtr& parent_link, const rdyn::LinkPtr& child_link, const Eigen::Affine3d& pose)
-{
+RDYN_INLINE bool Joint::connectJoint(const rdyn::LinkPtr& parent_link, const rdyn::LinkPtr& child_link,
+                                     const Eigen::Affine3d& pose) {
   if(!(m_q_min < m_q_max))
   {
     std::cerr << "[rdyn core]: cannot connect Joint " << m_name << ". Limits unfeasible" << std::endl;
@@ -100,8 +103,7 @@ inline bool Joint::connectJoint(const rdyn::LinkPtr& parent_link, const rdyn::Li
   return true;
 }
 
-inline void Joint::computeJacobian()
-{
+RDYN_INLINE void Joint::computeJacobian() {
   if (m_type == REVOLUTE)
   {
     m_screw_of_c_in_p << Eigen::MatrixXd::Constant(3, 1, 0), m_axis_in_p;
@@ -113,8 +115,7 @@ inline void Joint::computeJacobian()
 }
 
 
-inline void Joint::computedTpc()
-{
+RDYN_INLINE void Joint::computedTpc() {
   if (m_type == REVOLUTE)
   {
     m_last_R_jc = m_identity + sin(m_last_q) * m_skew_axis_in_j + (1 - cos(m_last_q)) * m_square_skew_axis_in_j;
@@ -125,8 +126,8 @@ inline void Joint::computedTpc()
 }
 
 
-inline void Joint::fromUrdf(const urdf::JointPtr& urdf_joint, const rdyn::LinkPtr& parent_link, const urdf::LinkPtr &child_link)
-{
+RDYN_INLINE void Joint::fromUrdf(const urdf::JointPtr& urdf_joint, const rdyn::LinkPtr& parent_link,
+                                 const urdf::LinkPtr& child_link) {
   m_parent_link = parent_link;
 
   m_T_pj = urdfPoseToAffine(urdf_joint->parent_to_joint_origin_transform);
@@ -223,8 +224,7 @@ inline void Joint::fromUrdf(const urdf::JointPtr& urdf_joint, const rdyn::LinkPt
 }
 
 
-inline int Joint::enforceLimits(const double& max_velocity, const double& max_acceleration, std::string& what)
-{
+RDYN_INLINE int Joint::enforceLimits(const double& max_velocity, const double& max_acceleration, std::string& what) {
   //=============================================================
   m_Dq_max = std::isnan(max_velocity) || (max_velocity<=0) ? m_Dq_max : max_velocity;
   m_DDq_max = std::isnan(max_acceleration) || (max_acceleration<=0) ?  10 * m_Dq_max : max_acceleration;
@@ -239,13 +239,9 @@ inline int Joint::enforceLimits(const double& max_velocity, const double& max_ac
   return what.length()>0 ? 0 : 1;
 }
 
-inline rdyn::JointPtr Joint::pointer()
-{
-  return shared_from_this();
-}
+RDYN_INLINE rdyn::JointPtr Joint::pointer() { return shared_from_this(); }
 
-inline const Eigen::Affine3d& Joint::getTransformation(const double& q)
-{
+RDYN_INLINE const Eigen::Affine3d& Joint::getTransformation(const double& q) {
   if (q != m_last_q)
   {
     m_last_q = q;
@@ -255,14 +251,10 @@ inline const Eigen::Affine3d& Joint::getTransformation(const double& q)
 }
 
 
-inline const Eigen::Vector6d& Joint::getScrew_of_child_in_parent()
-{
-  return m_screw_of_c_in_p;
-}
+RDYN_INLINE const Eigen::Vector6d& Joint::getScrew_of_child_in_parent() { return m_screw_of_c_in_p; }
 
 
-inline void Link::fromUrdf(const urdf::LinkPtr& urdf_link, const rdyn::JointPtr& parent_joint)
-{
+RDYN_INLINE void Link::fromUrdf(const urdf::LinkPtr& urdf_link, const rdyn::JointPtr& parent_joint) {
   m_parent_joint = parent_joint;
   m_name = urdf_link->name;
 
@@ -384,8 +376,7 @@ inline void Link::fromUrdf(const urdf::LinkPtr& urdf_link, const rdyn::JointPtr&
   m_Inertia_cc_single_term.at(9)(5, 5) = 1;
 }
 
-inline Eigen::VectorXd Link::getNominalParameters() const
-{
+RDYN_INLINE Eigen::VectorXd Link::getNominalParameters() const {
   Eigen::VectorXd nominal_parameters(10);
 
   nominal_parameters(0) = m_mass;
@@ -404,13 +395,9 @@ inline Eigen::VectorXd Link::getNominalParameters() const
   return nominal_parameters;
 }
 
-inline rdyn::LinkPtr Link::pointer()
-{
-  return shared_from_this();
-}
+RDYN_INLINE rdyn::LinkPtr Link::pointer() { return shared_from_this(); }
 
-inline rdyn::LinkPtr Link::findChild(const std::string& name)
-{
+RDYN_INLINE rdyn::LinkPtr Link::findChild(const std::string& name) {
   rdyn::LinkPtr ptr;
   if (!m_name.compare(name))
     return pointer();
@@ -427,8 +414,7 @@ inline rdyn::LinkPtr Link::findChild(const std::string& name)
   return ptr;
 }
 
-inline rdyn::JointPtr Link::findChildJoint(const std::string& name)
-{
+RDYN_INLINE rdyn::JointPtr Link::findChildJoint(const std::string& name) {
   rdyn::JointPtr ptr;
   if (m_child_joints.size() == 0)
     return ptr;
@@ -443,8 +429,7 @@ inline rdyn::JointPtr Link::findChildJoint(const std::string& name)
   return ptr;
 }
 
-inline bool Link::tryAddChildJoint(const rdyn::JointPtr& joint)
-{
+RDYN_INLINE bool Link::tryAddChildJoint(const rdyn::JointPtr& joint) {
   if(!joint)
   {
     std::cerr << "[rdyn core] joint is empty" << std::endl;
@@ -473,8 +458,7 @@ inline bool Link::tryAddChildJoint(const rdyn::JointPtr& joint)
   return true;
 }
 
-inline bool Link::addChildJoint(const rdyn::JointPtr& joint)
-{
+RDYN_INLINE bool Link::addChildJoint(const rdyn::JointPtr& joint) {
   if(tryAddChildJoint(joint))
   {
     m_child_joints.push_back(joint);
@@ -487,8 +471,7 @@ inline bool Link::addChildJoint(const rdyn::JointPtr& joint)
   }
 }
 
-inline bool Link::tryAddParentJoint(const rdyn::JointPtr& joint)
-{
+RDYN_INLINE bool Link::tryAddParentJoint(const rdyn::JointPtr& joint) {
   if(!joint)
   {
     std::cerr << "[rdyn core] joint is empty" << std::endl;
@@ -512,8 +495,7 @@ inline bool Link::tryAddParentJoint(const rdyn::JointPtr& joint)
   return true;
 }
 
-inline bool Link::addParentJoint(const rdyn::JointPtr &joint)
-{
+RDYN_INLINE bool Link::addParentJoint(const rdyn::JointPtr& joint) {
   if(tryAddParentJoint(joint))
   {
     m_parent_joint = joint;
@@ -523,11 +505,9 @@ inline bool Link::addParentJoint(const rdyn::JointPtr &joint)
   {
     return false;
   }
-
 }
 
-inline Chain::Chain(const Chain& cpy)
-{
+RDYN_INLINE Chain::Chain(const Chain& cpy) {
   rdyn::LinkPtr root_link = cpy.getLinks().front();
   std::string base_link_name = cpy.getLinksName().front();
   std::string ee_link_name = cpy.getLinksName().back();
@@ -540,10 +520,9 @@ inline Chain::Chain(const Chain& cpy)
 }
 
 
-inline Chain::Chain(const rdyn::LinkPtr& root_link,
-            const std::string& base_link_name, const std::string& ee_link_name, const Eigen::Vector3d& gravity)
-  : Chain()
-{
+RDYN_INLINE Chain::Chain(const rdyn::LinkPtr& root_link, const std::string& base_link_name, const std::string& ee_link_name,
+                         const Eigen::Vector3d& gravity)
+    : Chain() {
   std::string error;
   if(!init(error, root_link, base_link_name,ee_link_name,gravity))
   {
@@ -551,9 +530,8 @@ inline Chain::Chain(const rdyn::LinkPtr& root_link,
   }
 }
 
-inline Chain::Chain(const urdf::ModelInterface &model,
-        const std::string& base_link_name, const std::string& ee_link_name, const Eigen::Vector3d& gravity)
-{
+RDYN_INLINE Chain::Chain(const urdf::ModelInterface& model, const std::string& base_link_name, const std::string& ee_link_name,
+                         const Eigen::Vector3d& gravity) {
   rdyn::LinkPtr root_link(new rdyn::Link());
   root_link->fromUrdf(model.root_link_);
   std::string error;
@@ -563,9 +541,8 @@ inline Chain::Chain(const urdf::ModelInterface &model,
   }
 }
 
-inline Chain::Chain(const std::string& urdf_file_file_path, 
-            const std::string& base_link_name, const std::string& ee_link_name, const Eigen::Vector3d& gravity)
-{
+RDYN_INLINE Chain::Chain(const std::string& urdf_file_file_path, const std::string& base_link_name,
+                         const std::string& ee_link_name, const Eigen::Vector3d& gravity) {
   urdf::ModelInterface model;
   model=*urdf::parseURDFFile(urdf_file_file_path);
   rdyn::LinkPtr root_link(new rdyn::Link());
@@ -577,8 +554,7 @@ inline Chain::Chain(const std::string& urdf_file_file_path,
   }
 }
 
-inline Chain& Chain::operator=(const Chain& rhs)
-{
+RDYN_INLINE Chain& Chain::operator=(const Chain& rhs) {
   m_links.clear();
   m_joints.clear();
   m_links_name.clear();
@@ -600,12 +576,8 @@ inline Chain& Chain::operator=(const Chain& rhs)
 }
 
 //! ADDED TO INIT ALSO STATIC Chain!
-inline bool Chain::init(std::string& error,
-              rdyn::LinkPtr root_link,
-                const std::string& base_link_name,
-                  const std::string& ee_link_name,
-                    const Eigen::Vector3d& gravity)
-{
+RDYN_INLINE bool Chain::init(std::string& error, rdyn::LinkPtr root_link, const std::string& base_link_name,
+                             const std::string& ee_link_name, const Eigen::Vector3d& gravity) {
   m_is_screws_computed =
     m_is_jac_computed =
       m_is_vel_computed =
@@ -727,8 +699,7 @@ inline bool Chain::init(std::string& error,
   return setInputJointsName(m_moveable_joints_name, error);
 }
 
-inline bool Chain::setInputJointsName(const std::vector< std::string >& joints_name, std::string& what)
-{
+RDYN_INLINE bool Chain::setInputJointsName(const std::vector<std::string>& joints_name, std::string& what) {
   bool ok = true;
   m_input_to_chain_joint.resize(m_joints_number, joints_name.size());
 
@@ -850,10 +821,8 @@ inline bool Chain::setInputJointsName(const std::vector< std::string >& joints_n
 }
 
 
-inline int Chain::enforceLimits(const std::map<std::string,double>& max_velocities, 
-                                  const std::map<std::string,double>& max_accelerations,
-                                    std::string& error)
-{
+RDYN_INLINE int Chain::enforceLimits(const std::map<std::string, double>& max_velocities,
+                                     const std::map<std::string, double>& max_accelerations, std::string& error) {
   for(auto const & name : m_moveable_joints_name)
   {
     auto & joint = m_joints.at( m_joints_name.at(name) );
@@ -896,8 +865,7 @@ inline int Chain::enforceLimits(const std::map<std::string,double>& max_velociti
 }
 
 
-inline void Chain::computeFrames()
-{
+RDYN_INLINE void Chain::computeFrames() {
   m_sorted_q = m_input_to_chain_joint * m_last_q;
   for (unsigned int nl = 1; nl < m_links_number; nl++)
   {
@@ -907,8 +875,7 @@ inline void Chain::computeFrames()
   m_T_bt = m_T_bl.at(m_links_number - 1);
 }
 
-inline void Chain::computeScrews()
-{
+RDYN_INLINE void Chain::computeScrews() {
   for (unsigned int nl = 1; nl < m_links_number; nl++)
   {
     unsigned int nj = nl - 1;
@@ -917,8 +884,7 @@ inline void Chain::computeScrews()
   m_is_screws_computed = true;
 }
 
-inline const Eigen::Affine3d& Chain::getTransformation(const Eigen::VectorXd& q)
-{
+RDYN_INLINE const Eigen::Affine3d& Chain::getTransformation(const Eigen::VectorXd& q) {
   if ((q == m_last_q) || (m_joints_number == 0))
     return m_T_bt;
 
@@ -941,14 +907,12 @@ inline const Eigen::Affine3d& Chain::getTransformation(const Eigen::VectorXd& q)
   return m_T_bt;
 }
 
-inline const rdyn::VectorOfAffine3d& Chain::getTransformations(const Eigen::VectorXd& q)
-{
+RDYN_INLINE const rdyn::VectorOfAffine3d& Chain::getTransformations(const Eigen::VectorXd& q) {
   getTransformation(q);
   return m_T_bl;
 }
 
-inline const Eigen::Affine3d& Chain::getTransformationLink(const Eigen::VectorXd &q, const std::string &link_name)
-{
+RDYN_INLINE const Eigen::Affine3d& Chain::getTransformationLink(const Eigen::VectorXd& q, const std::string& link_name) {
   getTransformation(q);
   std::vector<std::string>::iterator it=std::find(m_links_name.begin(), m_links_name.end(), link_name);
   if (it == m_links_name.end())
@@ -960,8 +924,7 @@ inline const Eigen::Affine3d& Chain::getTransformationLink(const Eigen::VectorXd
   return m_T_bl.at(link_idx);
 }
 
-inline const Eigen::Matrix6Xd& Chain::getJacobian(const Eigen::VectorXd& q)
-{
+RDYN_INLINE const Eigen::Matrix6Xd& Chain::getJacobian(const Eigen::VectorXd& q) {
   getTransformation(q);
   if (m_joints_number == 0)
     return m_jacobian;
@@ -984,8 +947,7 @@ inline const Eigen::Matrix6Xd& Chain::getJacobian(const Eigen::VectorXd& q)
   return m_jacobian;
 }
 
-inline Eigen::Matrix6Xd Chain::getJacobianLink(const Eigen::VectorXd& q, const std::string& link_name)
-{
+RDYN_INLINE Eigen::Matrix6Xd Chain::getJacobianLink(const Eigen::VectorXd& q, const std::string& link_name) {
   maybe_unused(q);
   if (!m_is_screws_computed)
     computeScrews();
@@ -1014,8 +976,7 @@ inline Eigen::Matrix6Xd Chain::getJacobianLink(const Eigen::VectorXd& q, const s
   return jac;
 }
 
-inline const rdyn::VectorOfVector6d& Chain::getTwist(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq)
-{
+RDYN_INLINE const rdyn::VectorOfVector6d& Chain::getTwist(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq) {
   getTransformation(q);
   m_sorted_Dq = m_input_to_chain_joint * Dq;
   if ((m_sorted_Dq - m_last_Dq).norm() > 1e-12)
@@ -1049,8 +1010,8 @@ inline const rdyn::VectorOfVector6d& Chain::getTwist(const Eigen::VectorXd& q, c
 }
 
 
-inline const Eigen::Vector6d& Chain::getTwistLink(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq, const std::string& link_name)
-{
+RDYN_INLINE const Eigen::Vector6d& Chain::getTwistLink(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq,
+                                                       const std::string& link_name) {
   getTwist(q,Dq);
   std::vector<std::string>::iterator it=std::find(m_links_name.begin(), m_links_name.end(), link_name);
   if (it == m_links_name.end())
@@ -1062,8 +1023,7 @@ inline const Eigen::Vector6d& Chain::getTwistLink(const Eigen::VectorXd& q, cons
   return m_twists.at(link_idx);
 }
 
-inline const rdyn::VectorOfVector6d& Chain::getDTwistLinearPart(const Eigen::VectorXd& q, const Eigen::VectorXd& DDq)
-{
+RDYN_INLINE const rdyn::VectorOfVector6d& Chain::getDTwistLinearPart(const Eigen::VectorXd& q, const Eigen::VectorXd& DDq) {
   getTransformation(q);
   m_sorted_DDq = m_input_to_chain_joint * DDq;
   if ((m_sorted_DDq - m_last_DDq).norm() > 1e-12)
@@ -1096,8 +1056,7 @@ inline const rdyn::VectorOfVector6d& Chain::getDTwistLinearPart(const Eigen::Vec
   return m_Dtwists_linear_part;
 }
 
-inline const rdyn::VectorOfVector6d& Chain::getDTwistNonLinearPart(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq)
-{
+RDYN_INLINE const rdyn::VectorOfVector6d& Chain::getDTwistNonLinearPart(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq) {
   getTransformation(q);
   if (!m_is_vel_computed)
     getTwist(q, Dq);
@@ -1115,8 +1074,8 @@ inline const rdyn::VectorOfVector6d& Chain::getDTwistNonLinearPart(const Eigen::
   return m_Dtwists_nonlinear_part;
 }
 
-inline const rdyn::VectorOfVector6d& Chain::getDTwist(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq, const Eigen::VectorXd& DDq)
-{
+RDYN_INLINE const rdyn::VectorOfVector6d& Chain::getDTwist(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq,
+                                                           const Eigen::VectorXd& DDq) {
   getTransformation(q);
 
   m_sorted_DDq = m_input_to_chain_joint * DDq;
@@ -1159,8 +1118,7 @@ inline const rdyn::VectorOfVector6d& Chain::getDTwist(const Eigen::VectorXd& q, 
   return m_Dtwists;
 }
 
-inline const rdyn::VectorOfVector6d& Chain::getDDTwistLinearPart(const Eigen::VectorXd& q, const Eigen::VectorXd& DDDq)
-{
+RDYN_INLINE const rdyn::VectorOfVector6d& Chain::getDDTwistLinearPart(const Eigen::VectorXd& q, const Eigen::VectorXd& DDDq) {
   getTransformation(q);
 
   m_sorted_DDDq = m_input_to_chain_joint * DDDq;
@@ -1189,8 +1147,8 @@ inline const rdyn::VectorOfVector6d& Chain::getDDTwistLinearPart(const Eigen::Ve
   return m_DDtwists_linear_part;
 }
 
-inline const rdyn::VectorOfVector6d& Chain::getDDTwistNonLinearPart(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq, const Eigen::VectorXd& DDq)
-{
+RDYN_INLINE const rdyn::VectorOfVector6d& Chain::getDDTwistNonLinearPart(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq,
+                                                                         const Eigen::VectorXd& DDq) {
   getTransformation(q);
   if (!m_is_acc_computed)
     getDTwist(q, Dq, DDq);
@@ -1218,8 +1176,8 @@ inline const rdyn::VectorOfVector6d& Chain::getDDTwistNonLinearPart(const Eigen:
   return m_DDtwists_nonlinear_part;
 }
 
-inline const rdyn::VectorOfVector6d& Chain::getDDTwist(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq, const Eigen::VectorXd& DDq, const Eigen::VectorXd& DDDq)
-{
+RDYN_INLINE const rdyn::VectorOfVector6d& Chain::getDDTwist(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq,
+                                                            const Eigen::VectorXd& DDq, const Eigen::VectorXd& DDDq) {
   getTransformation(q);
   m_sorted_DDDq = m_input_to_chain_joint * DDDq;
   if ((m_sorted_DDDq - m_last_DDDq).norm() > 1e-12)
@@ -1258,8 +1216,9 @@ inline const rdyn::VectorOfVector6d& Chain::getDDTwist(const Eigen::VectorXd& q,
   return m_DDtwists;
 }
 
-inline const rdyn::VectorOfVector6d& Chain::getWrench(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq, const Eigen::VectorXd& DDq, rdyn::VectorOfVector6d& ext_wrenches_in_link_frame)
-{
+RDYN_INLINE const rdyn::VectorOfVector6d& Chain::getWrench(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq,
+                                                           const Eigen::VectorXd& DDq,
+                                                           rdyn::VectorOfVector6d& ext_wrenches_in_link_frame) {
   getDTwist(q, Dq, DDq);
   if (m_is_wrench_computed)
     return m_wrenches;
@@ -1296,8 +1255,9 @@ inline const rdyn::VectorOfVector6d& Chain::getWrench(const Eigen::VectorXd& q, 
   return m_wrenches;
 }
 
-inline const Eigen::VectorXd& Chain::getJointTorque(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq, const Eigen::VectorXd& DDq, rdyn::VectorOfVector6d& ext_wrenches_in_link_frame)
-{
+RDYN_INLINE const Eigen::VectorXd& Chain::getJointTorque(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq,
+                                                         const Eigen::VectorXd& DDq,
+                                                         rdyn::VectorOfVector6d& ext_wrenches_in_link_frame) {
   getWrench(q, Dq, DDq, ext_wrenches_in_link_frame);
   for (unsigned int nj = 0; nj < m_joints_number; nj++)
   {
@@ -1309,16 +1269,15 @@ inline const Eigen::VectorXd& Chain::getJointTorque(const Eigen::VectorXd& q, co
 }
 
 
-inline const Eigen::VectorXd& Chain::getJointTorque(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq, const Eigen::VectorXd& DDq)
-{
+RDYN_INLINE const Eigen::VectorXd& Chain::getJointTorque(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq,
+                                                         const Eigen::VectorXd& DDq) {
   rdyn::VectorOfVector6d ext_wrenches_in_link_frame(m_links_number);
   for (unsigned int iL = 0; iL < m_links_number; iL++)
     ext_wrenches_in_link_frame.at(iL).setZero();
   return getJointTorque(q, Dq, DDq, ext_wrenches_in_link_frame);
 }
 
-inline const Eigen::VectorXd& Chain::getJointTorqueNonLinearPart(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq)
-{
+RDYN_INLINE const Eigen::VectorXd& Chain::getJointTorqueNonLinearPart(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq) {
   Eigen::VectorXd DDq(m_active_joints_number);
   DDq.setZero();
   rdyn::VectorOfVector6d ext_wrenches_in_link_frame(m_links_number);
@@ -1327,10 +1286,7 @@ inline const Eigen::VectorXd& Chain::getJointTorqueNonLinearPart(const Eigen::Ve
   return getJointTorque(q, Dq, DDq, ext_wrenches_in_link_frame);
 }
 
-inline Eigen::MatrixXd Chain::getRegressor(const Eigen::VectorXd& q,
-                                            const Eigen::VectorXd& Dq,
-                                              const Eigen::VectorXd& DDq)
-{
+RDYN_INLINE Eigen::MatrixXd Chain::getRegressor(const Eigen::VectorXd& q, const Eigen::VectorXd& Dq, const Eigen::VectorXd& DDq) {
   if (q.rows() != Dq.rows())
   {
     throw std::invalid_argument(
@@ -1385,8 +1341,7 @@ inline Eigen::MatrixXd Chain::getRegressor(const Eigen::VectorXd& q,
   return result;
 }
 
-inline const Eigen::MatrixXd& Chain::getJointInertia(const Eigen::VectorXd& q)
-{
+RDYN_INLINE const Eigen::MatrixXd& Chain::getJointInertia(const Eigen::VectorXd& q) {
   getTransformation(q);
   computeScrews();
   m_joint_inertia_extended.setZero();
@@ -1410,8 +1365,7 @@ inline const Eigen::MatrixXd& Chain::getJointInertia(const Eigen::VectorXd& q)
 }
 
 
-inline Eigen::VectorXd Chain::getNominalParameters()
-{
+RDYN_INLINE Eigen::VectorXd Chain::getNominalParameters() {
   Eigen::VectorXd nominal_par(10 * (m_links_number - 1));
   nominal_par.setZero();
   for (int nl = (m_links_number - 1); nl > 0; nl--)
@@ -1426,8 +1380,8 @@ inline Eigen::VectorXd Chain::getNominalParameters()
  * q_min <= sol+dq <= q_max
  *
  */
-inline bool Chain::computeLocalIk(Eigen::VectorXd& sol, const Eigen::Affine3d &T_b_t, const Eigen::VectorXd &seed, const double &toll, const double& max_time_s)
-{
+RDYN_INLINE bool Chain::computeLocalIk(Eigen::VectorXd& sol, const Eigen::Affine3d& T_b_t, const Eigen::VectorXd& seed,
+                                       const double& toll, const double& max_time_s) {
   auto ti = std::chrono::high_resolution_clock::now();
 
   assert(seed.size()==m_q_min.size());
@@ -1464,8 +1418,8 @@ inline bool Chain::computeLocalIk(Eigen::VectorXd& sol, const Eigen::Affine3d &T
 }
 
 
-inline bool Chain::computeWeigthedLocalIk(Eigen::VectorXd& sol, const Eigen::Affine3d& T_b_t, Eigen::Vector6d weight, const Eigen::VectorXd& seed, const double& toll, const double& max_time_s)
-{
+RDYN_INLINE bool Chain::computeWeigthedLocalIk(Eigen::VectorXd& sol, const Eigen::Affine3d& T_b_t, Eigen::Vector6d weight,
+                                               const Eigen::VectorXd& seed, const double& toll, const double& max_time_s) {
   auto ti = std::chrono::high_resolution_clock::now();
 
   sol = seed;
@@ -1498,8 +1452,7 @@ inline bool Chain::computeWeigthedLocalIk(Eigen::VectorXd& sol, const Eigen::Aff
   return false;
 }
 
-inline std::vector<Eigen::VectorXd> Chain::getMultiplicity(const Eigen::VectorXd &q)
-{
+RDYN_INLINE std::vector<Eigen::VectorXd> Chain::getMultiplicity(const Eigen::VectorXd& q) {
   std::vector<std::vector<double>> multiturn_ax(m_active_joints_number);
 
   for (unsigned int idx = 0; idx < m_active_joints_number; idx++)
@@ -1543,12 +1496,10 @@ inline std::vector<Eigen::VectorXd> Chain::getMultiplicity(const Eigen::VectorXd
   }
 
   return multiturn;
-
 }
 
-inline rdyn::ChainPtr createChain(const urdf::ModelInterface& urdf_model_interface,
-    const std::string& base_frame, const std::string& tool_frame, const Eigen::Vector3d& gravity)
-{
+RDYN_INLINE rdyn::ChainPtr createChain(const urdf::ModelInterface& urdf_model_interface, const std::string& base_frame,
+                                       const std::string& tool_frame, const Eigen::Vector3d& gravity) {
   rdyn::LinkPtr root_link(new rdyn::Link());
   root_link->fromUrdf(urdf_model_interface.root_link_);
   rdyn::ChainPtr chain(new rdyn::Chain(root_link, base_frame, tool_frame, gravity));
@@ -1557,28 +1508,21 @@ inline rdyn::ChainPtr createChain(const urdf::ModelInterface& urdf_model_interfa
   return chain;
 }
 
-rdyn::ChainPtr createChain(const std::string& file,
-                           const std::string& base_frame,
-                           const std::string& tool_frame,
-                           const Eigen::Vector3d& gravity)
-{
+RDYN_INLINE rdyn::ChainPtr createChain(const std::string& file, const std::string& base_frame, const std::string& tool_frame,
+                                       const Eigen::Vector3d& gravity) {
   urdf::ModelInterface model;
   model =  *urdf::parseURDF(file);
   return createChain(model,base_frame,tool_frame,gravity);
 }
 
-rdyn::ChainPtr createChainFromFile( const std::string& path,
-                              const std::string& base_frame,
-                              const std::string& tool_frame,
-                              const Eigen::Vector3d& gravity)
-{
+RDYN_INLINE rdyn::ChainPtr createChainFromFile(const std::string& path, const std::string& base_frame,
+                                               const std::string& tool_frame, const Eigen::Vector3d& gravity) {
   urdf::ModelInterface model;
   model =  *urdf::parseURDFFile(path);
   return createChain(model,base_frame,tool_frame,gravity);
 }
 
-inline rdyn::ChainPtr createChain(const rdyn::ChainPtr& cpy)
-{
+RDYN_INLINE rdyn::ChainPtr createChain(const rdyn::ChainPtr& cpy) {
   rdyn::LinkPtr root_link = cpy->getLinks().front();
   std::string base_link_name = cpy->getLinksName().front();
   std::string ee_link_name = cpy->getLinksName().back();
@@ -1587,8 +1531,7 @@ inline rdyn::ChainPtr createChain(const rdyn::ChainPtr& cpy)
   return chain;
 }
 
-inline rdyn::ChainPtr createChain(const rdyn::Chain& cpy)
-{
+RDYN_INLINE rdyn::ChainPtr createChain(const rdyn::Chain& cpy) {
   rdyn::LinkPtr root_link = cpy.getLinks().front();
   std::string base_link_name = cpy.getLinksName().front();
   std::string ee_link_name = cpy.getLinksName().back();
@@ -1597,8 +1540,7 @@ inline rdyn::ChainPtr createChain(const rdyn::Chain& cpy)
   return chain;
 }
 
-inline rdyn::ChainPtr joinChains(const rdyn::ChainPtr& root_chain, const rdyn::ChainPtr& branch_chain)
-{
+RDYN_INLINE rdyn::ChainPtr joinChains(const rdyn::ChainPtr& root_chain, const rdyn::ChainPtr& branch_chain) {
   std::cout << "creating_merge_joint" << std::endl;
   rdyn::JointPtr merge_joint(new rdyn::Joint(rdyn::Joint::Type::FIXED, Eigen::Vector3d::Zero()));
   std::cout << "merge_joint" << std::endl;
@@ -1616,5 +1558,69 @@ inline rdyn::ChainPtr joinChains(const rdyn::ChainPtr& root_chain, const rdyn::C
   return new_chain;
 }
 
+RDYN_INLINE double Chain::getManipulability(const Eigen::VectorXd& q, const double svd_floor /*=1e-12*/) {
+  // Ensure internal state/Jacobian up to date
+  const Eigen::Matrix6Xd& J = getJacobian(q);
+
+  // Use SVD for numerical stability: w = product of singular values
+  Eigen::JacobiSVD<Eigen::MatrixXd> svd(J, Eigen::ComputeThinU | Eigen::ComputeThinV);
+  const Eigen::VectorXd s = svd.singularValues();
+
+  double w = 1.0;
+  const int r = std::min<int>(s.size(), 6); // product only of available sigmas
+  for (int i = 0; i < r; ++i) {
+    const double si = std::max(s(i), svd_floor); // floor to avoid collapse at singularities
+    w *= si;
+  }
+  return w;
+}
+
+RDYN_INLINE Eigen::VectorXd Chain::getManipulabilityGradient(const Eigen::VectorXd& q, const double step_rel /*=1e-6*/,
+                                                             const double step_abs /*=1e-8*/, const double svd_floor
+                                                             /*=1e-12*/) {
+  // Gradient is over ACTIVE joints (same dimensionality as q passed to Chain methods)
+  // q is expected to be sized to m_active_joints_number (as in other Chain APIs).
+  if (q.size() != static_cast<int>(m_active_joints_number)) {
+    throw std::invalid_argument("getManipulabilityGradient: q has wrong size");
+  }
+
+  Eigen::VectorXd g(m_active_joints_number);
+  g.setZero();
+
+  // Base manipulability
+  const double w0 = getManipulability(q, svd_floor);
+
+  // Pick a per-joint central-difference step that scales with magnitude/range
+  // Use joint limits when available to scale the relative step nicely.
+  for (unsigned int i = 0; i < m_active_joints_number; ++i) {
+    // Step size
+    double range_i = 1.0;
+    if (i < static_cast<unsigned int>(m_q_max.size()) && i < static_cast<unsigned int>(m_q_min.size())) {
+      range_i = std::max(1e-3, std::abs(m_q_max(i) - m_q_min(i))); // avoid zero range
+    }
+    const double h = std::max(step_abs, step_rel * std::max(range_i, 1.0));
+
+    // Central difference
+    Eigen::VectorXd q_plus = q;
+    Eigen::VectorXd q_minus = q;
+    q_plus(i) += h;
+    q_minus(i) -= h;
+
+    const double wp = getManipulability(q_plus, svd_floor);
+    const double wm = getManipulability(q_minus, svd_floor);
+
+    g(i) = (wp - wm) / (2.0 * h);
+  }
+
+  // Optional: if you ever need the gradient of log-manipulability, uncomment:
+  // return (g.array() / std::max(w0, 1e-16)).matrix();
+
+  // As-is: gradient of w(q)
+  (void)w0; // suppress unused warning if not using log gradient
+  return g;
+}
+
+
 }  // namespace rdyn
 
+#endif

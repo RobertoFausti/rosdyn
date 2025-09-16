@@ -555,6 +555,9 @@ public:
   const Eigen::MatrixXd& getJointInertia(const Eigen::VectorXd& q);
   Eigen::VectorXd getNominalParameters();
 
+  double getManipulability(const Eigen::VectorXd& q, const double svd_floor /*=1e-12*/);
+  Eigen::VectorXd getManipulabilityGradient(const Eigen::VectorXd& q, const double step_rel = 1e-6, const double step_abs = 1e-8,
+                                            const double svd_floor = 1e-12);
 };
 
 
@@ -627,6 +630,8 @@ rdyn::ChainPtr joinChains(const rdyn::ChainPtr& root_chain,
 
 }  // namespace rdyn
 
+#ifndef RDYN_BUILD_SHARED
 #include <rdyn_core/internal/primitives_impl.h>
+#endif
 
 #endif  // RDYN_CORE_PRIMITIVES_H 
